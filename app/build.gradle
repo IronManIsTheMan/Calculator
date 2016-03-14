@@ -17,6 +17,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    defaultConfig {
+        ndk{
+            moduleName "NativeCalculator"
+            abiFilters "armeabi", "armeabi-v7a", "x86"
+        }
+    }
 }
 
 dependencies {

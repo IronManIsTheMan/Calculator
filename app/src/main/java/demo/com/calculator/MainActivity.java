@@ -3,28 +3,38 @@ package demo.com.calculator;
 import android.app.Activity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import org.w3c.dom.Text;
+import demo.com.calculator.util.NativeCalculator;
 
 
 public class MainActivity extends Activity implements View.OnClickListener {
 
     private TextView resultView;
     private StringBuilder currentInputContent;
-    private String firstOperand;
-    private String secondOperant;
+    private final static String MINUS_MARK = "-";
+    private final static String ADD_MARK = "+";
+    private final static String MULTIPLE_MARK = "x";
+    private final static String REGX_FOR_MARKS = "[+x-]";
+    private NativeCalculator nativeCalculator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
+
 
         findViews();
         currentInputContent = new StringBuilder();
+
+        nativeCalculator = new NativeCalculator();
     }
 
     private void findViews() {
@@ -42,28 +52,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         findViewById(R.id.del).setOnClickListener(this);
 
         resultView = (TextView) findViewById(R.id.result);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -123,31 +111,67 @@ public class MainActivity extends Activity implements View.OnClickListener {
             break;
             case R.id.multiple:
                 if (TextUtils.isEmpty(currentInputContent.toString())) {
-                    currentInputContent.append("0");
-                    currentInputContent.append("X");
-                } else if (!isLastCharSign()) {
-                    currentInputContent.append("X");
+                    return;
+                }
+                if (!isLastCharMark()) {
+
+                    String strToValidate = currentInputContent.toString();
+                    if (currentInputContent.substring(0, 1).equals(MINUS_MARK)) {
+                        strToValidate = currentInputContent.substring(1);
+                    }
+
+                    if (strToValidate.split(REGX_FOR_MARKS).length == 2) {
+                        doCalculation();
+                        return;
+                    } else {
+                        currentInputContent.append(MULTIPLE_MARK);
+                    }
                 }
             break;
             case R.id.minus:
                 if (TextUtils.isEmpty(currentInputContent.toString())) {
-                    currentInputContent.append("0");
-                    currentInputContent.append("-");
-                } else if (!isLastCharSign()) {
-                    currentInputContent.append("-");
+                    currentInputContent.append(MINUS_MARK);
+                }
+                if (!isLastCharMark()) {
+
+                    String strToValidate = currentInputContent.toString();
+                    if (currentInputContent.substring(0, 1).equals(MINUS_MARK)) {
+                        strToValidate = currentInputContent.substring(1);
+                    }
+
+                    if (strToValidate.split(REGX_FOR_MARKS).length == 2) {
+                        doCalculation();
+                        return;
+                    } else {
+                        currentInputContent.append(MINUS_MARK);
+                    }
                 }
             break;
             case R.id.add:
                 if (TextUtils.isEmpty(currentInputContent.toString())) {
-                    currentInputContent.append("0");
-                    currentInputContent.append("+");
-                } else if (!isLastCharSign()) {
-                    currentInputContent.append("+");
+                    return;
+                }
+                if (!isLastCharMark()) {
+
+                    String strToValidate = currentInputContent.toString();
+                    if (currentInputContent.substring(0, 1).equals(MINUS_MARK)) {
+                        strToValidate = currentInputContent.substring(1);
+                    }
+
+                    if (strToValidate.split(REGX_FOR_MARKS).length == 2) {
+                        doCalculation();
+                        return;
+                    } else {
+                        currentInputContent.append(ADD_MARK);
+                    }
                 }
             break;
             case R.id.equal:
-                //TBD do calculate.
-            break;
+                if (TextUtils.isEmpty(currentInputContent.toString())) {
+                    return;
+                }
+                doCalculation();
+                return;
             case R.id.del:
                 if (!TextUtils.isEmpty(currentInputContent.toString())) {
                     currentInputContent.deleteCharAt(currentInputContent.length() - 1);
@@ -159,10 +183,56 @@ public class MainActivity extends Activity implements View.OnClickListener {
         resultView.setText(currentInputContent.toString());
     }
 
-    private boolean isLastCharSign() {
+    private void doCalculation() {
+        boolean isFirstOperandNegtive = false;
+        String subString = currentInputContent.toString();
+        if (currentInputContent.substring(0, 1).equals(MINUS_MARK)) {
+            isFirstOperandNegtive = true;
+            subString = currentInputContent.substring(1);
+        }
+        if (!isLastCharMark() && subString.toString().split(REGX_FOR_MARKS).length == 2) {
+            String operator = MULTIPLE_MARK;
+            String firstOperand = null;
+            String secondOperant = null;
+
+            if (subString.toString().split(getRegxStr(operator)).length < 2) {
+                operator = ADD_MARK;
+            } else {
+                firstOperand = subString.toString().split(getRegxStr(operator))[0];
+                secondOperant = subString.toString().split(getRegxStr(operator))[1];
+            }
+
+            if (subString.toString().split(getRegxStr(operator)).length < 2) {
+                operator = MINUS_MARK;
+            } else {
+                firstOperand = subString.toString().split(getRegxStr(operator))[0];
+                secondOperant = subString.toString().split(getRegxStr(operator))[1];
+            }
+
+            if (subString.toString().split(getRegxStr(operator)).length < 2) {
+                Log.e("CC", "Impossible");
+            } else {
+                firstOperand = subString.toString().split(getRegxStr(operator))[0];
+                secondOperant = subString.toString().split(getRegxStr(operator))[1];
+            }
+
+            if (firstOperand != null && secondOperant != null) {
+                if (isFirstOperandNegtive) {
+                    firstOperand = "-" + firstOperand;
+                }
+                calculate(firstOperand, secondOperant, operator);
+            }
+        }
+    }
+
+    private String getRegxStr(String operator) {
+        return "[" + operator + "]";
+    }
+
+    private boolean isLastCharMark() {
         CharSequence lastChar = currentInputContent.subSequence(currentInputContent.length() - 1, currentInputContent.length());
 
-        return lastChar.equals("X") || lastChar.equals("-") || lastChar.equals("+");
+        return lastChar.equals(MULTIPLE_MARK) || lastChar.equals(MINUS_MARK) || lastChar.equals(ADD_MARK);
     }
 
     private boolean ifStartByZero() {
@@ -170,5 +240,26 @@ public class MainActivity extends Activity implements View.OnClickListener {
             return false;
         }
         return currentInputContent.substring(0, 1).equals("0");
+    }
+
+    private void calculate(String leftOperand, String rightOperand, String operator) {
+        try {
+            int result = 0;
+            if (operator.equals(MINUS_MARK)) {
+                result = nativeCalculator.subtract(Integer.valueOf(leftOperand).intValue(), Integer.valueOf(rightOperand).intValue());
+            } else if (operator.equals(ADD_MARK)) {
+                result = nativeCalculator.add(Integer.valueOf(leftOperand).intValue(), Integer.valueOf(rightOperand).intValue());
+            } else if (operator.equals(MULTIPLE_MARK)) {
+                result = nativeCalculator.multiply(Integer.valueOf(leftOperand).intValue(), Integer.valueOf(rightOperand).intValue());
+            }
+            resultView.setText(String.valueOf(result));
+
+            currentInputContent.delete(0, currentInputContent.length());
+            currentInputContent.append(String.valueOf(result));
+        } catch (NumberFormatException e) {
+            currentInputContent.delete(0, currentInputContent.length());
+            resultView.setText("");
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 }
