@@ -246,11 +246,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
         try {
             int result = 0;
             if (operator.equals(MINUS_MARK)) {
-                result = nativeCalculator.subtract(Integer.valueOf(leftOperand).intValue(), Integer.valueOf(rightOperand).intValue());
+                result = nativeCalculator.subtractAndModulo7(Integer.valueOf(leftOperand).intValue(), Integer.valueOf(rightOperand).intValue());
             } else if (operator.equals(ADD_MARK)) {
-                result = nativeCalculator.add(Integer.valueOf(leftOperand).intValue(), Integer.valueOf(rightOperand).intValue());
+                result = nativeCalculator.addAndModulo7(Integer.valueOf(leftOperand).intValue(), Integer.valueOf(rightOperand).intValue());
             } else if (operator.equals(MULTIPLE_MARK)) {
-                result = nativeCalculator.multiply(Integer.valueOf(leftOperand).intValue(), Integer.valueOf(rightOperand).intValue());
+                result = nativeCalculator.multiplyAndModulo7(Integer.valueOf(leftOperand).intValue(), Integer.valueOf(rightOperand).intValue());
             }
             resultView.setText(String.valueOf(result));
 
