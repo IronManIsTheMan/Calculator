@@ -3,9 +3,6 @@ package demo.com.calculator.util;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-/**
- * Created by 95 on 2016/3/14.
- */
 public class NativeCalculatorTest extends TestCase {
 
     private NativeCalculator nativeCalculator;
